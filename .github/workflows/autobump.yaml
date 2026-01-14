@@ -1,0 +1,93 @@
+name: Bump casks on schedule or request
+
+on:
+  schedule:
+    # Every Sunday at midnight
+    - cron: '0 0 * * 0' 
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  autobump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for updates
+        id: check
+        run: |
+          # Get latest version from upstream
+          LATEST_TAG=$(curl -sL https://api.github.com/repos/be5invis/Sarasa-Gothic/releases/latest | jq -r .tag_name)
+          # Remove 'v' prefix if present
+          LATEST_VERSION=${LATEST_TAG#v}
+          
+          # Get current version from one of the Casks (assuming all are synced)
+          FIRST_CASK=$(ls Casks/*.rb | head -n 1)
+          CURRENT_VERSION=$(grep 'version "' "$FIRST_CASK" | cut -d '"' -f 2)
+          
+          echo "Latest version: $LATEST_VERSION"
+          echo "Current version: $CURRENT_VERSION"
+          
+          if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "New version available!"
+            echo "update=true" >> $GITHUB_OUTPUT
+            echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date."
+            echo "update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Casks
+        if: steps.check.outputs.update == 'true'
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          for cask_file in Casks/*.rb; do
+            echo "Processing $cask_file..."
+            
+            # Extract URL template from the Cask file
+            # e.g., url "https://.../v#{version}/SarasaMono-TTF-#{version}.7z"
+            URL_TEMPLATE=$(grep 'url "' "$cask_file" | cut -d '"' -f 2)
+            
+            # Replace #{version} with the new VERSION
+            DOWNLOAD_URL=${URL_TEMPLATE//'#{version}'/$VERSION}
+            FILENAME=$(basename "$DOWNLOAD_URL")
+            
+            echo "Target URL: $DOWNLOAD_URL"
+            
+            # Download if not already downloaded (optimization for shared files)
+            if [ ! -f "$FILENAME" ]; then
+              echo "Downloading $FILENAME..."
+              curl -L -o "$FILENAME" "$DOWNLOAD_URL"
+            else
+               echo "$FILENAME already exists. Skipping download."
+            fi
+            
+            echo "Calculating SHA256 for $FILENAME..."
+            SHA256=$(sha256sum "$FILENAME" | cut -d ' ' -f 1)
+            echo "SHA256: $SHA256"
+            
+            # Update the Cask file
+            # Update version (safely to avoid partial matches if possible, but basic sed is usually fine here)
+            sed -i "s/version \".*\"/version \"$VERSION\"/" "$cask_file"
+            # Update sha256
+            sed -i "s/sha256 \".*\"/sha256 \"$SHA256\"/" "$cask_file"
+          done
+          
+          # Clean up downloaded files
+          rm -f *.7z
+
+      - name: Commit and Push
+        if: steps.check.outputs.update == 'true'
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add Casks/*.rb
+          git commit -m "Update Casks to $VERSION"
+          git push
