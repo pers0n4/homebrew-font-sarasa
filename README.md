@@ -4,7 +4,7 @@ Homebrew Tap for [Sarasa Gothic](https://github.com/be5invis/Sarasa-Gothic) font
 
 ## Installation
 
-`brew install --cask pers0n4/font-sarasa/<`
+`brew install --cask pers0n4/font-sarasa/<cask>`
 
 Or `brew tap pers0n4/font-sarasa` and then
 
@@ -18,9 +18,9 @@ Or, in a `brew bundle` `Brewfile`:
 
 ```ruby
 tap "pers0n4/font-sarasa"
-brew "font-sarasa-mono-k"
-brew "font-sarasa-term-k"
-brew "font-sarasa-fixed-k"
+cask "font-sarasa-mono-k"
+cask "font-sarasa-term-k"
+cask "font-sarasa-fixed-k"
 ```
 
 ## Development & Testing
