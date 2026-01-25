@@ -1,6 +1,6 @@
 cask "font-sarasa-term-k" do
-  version "1.0.35"
-  sha256 "72a34420d3fe6467f2db54aa87111128bce86eb7ee460f1be587dae3a4f6c4de"
+  version "1.0.36"
+  sha256 "10aca9a27361ea81c99255cd272346bda1427703f59c97fd5c9f05c19567702f"
 
   url "https://github.com/be5invis/Sarasa-Gothic/releases/download/v#{version}/SarasaTerm-TTF-#{version}.7z"
   name "Sarasa Term K"

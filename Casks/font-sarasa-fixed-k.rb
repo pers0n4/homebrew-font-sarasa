@@ -1,6 +1,6 @@
 cask "font-sarasa-fixed-k" do
-  version "1.0.35"
-  sha256 "3ed5ad03d01deb9694af6a6074a657a9e60e4523605c19c4839d0c8a89d95892"
+  version "1.0.36"
+  sha256 "22ba4085e8891fa43f37290debdf319859dd0ab8ede1cd036f84a70c536fad60"
 
   url "https://github.com/be5invis/Sarasa-Gothic/releases/download/v#{version}/SarasaFixed-TTF-#{version}.7z"
   name "Sarasa Fixed K"
